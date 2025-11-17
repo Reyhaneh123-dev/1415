@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>عملیات روی مجموعه‌ها</title>
+<style>
+body { font-family:Tahoma,sans-serif; background:#fbf7ff; color:#122; padding:28px; direction:rtl; }
+h2 { color:#6a1b9a; }
+label { display:block; margin-top:10px; }
+select,input,button { margin:8px 0; padding:8px 10px; font-size:15px; border-radius:8px; border:1px solid #e2d; }
+button { border:none; cursor:pointer; background:#8e24aa; color:white; padding:9px 12px; border-radius:10px; transition:.2s;}
+button:hover{transform:translateY(-2px); background:#6a1b9a;}
+.result-box { background:white; border-radius:10px; padding:14px; margin-top:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.op-operators { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:10px; }
+.op-wrap { position:relative; display:inline-block; margin:10px; }
+.op-wrap .center { font-size:18px; font-weight:700; padding:8px 12px; border-radius:8px; background:#f3e0ff; color:#6a1b9a; }
+.op-wrap .top,.op-wrap .bottom,.op-wrap .left,.op-wrap .right { position:absolute; font-size:12px; opacity:0.85; }
+.op-wrap .top { top:-12px; left:50%; transform:translateX(-50%);}
+.op-wrap .bottom { bottom:-12px; left:50%; transform:translateX(-50%);}
+.op-wrap .left { left:-18px; top:50%; transform:translateY(-50%);}
+.op-wrap .right { right:-18px; top:50%; transform:translateY(-50%);}
+pre.code { background:#f6f6ff; padding:10px; border-radius:8px; overflow:auto; direction:ltr; }
+</style>
+</head>
+<body>
+<h2>➕ عملیات بین مجموعه‌ها</h2>
+<div class="result-box" id="showA"></div>
+<label>روش ساخت مجموعه B:</label>
+<select id="methodB">
+  <option value="">انتخاب کنید...</option>
+  <option value="symbol">با نماد ریاضی</option>
+  <option value="members">اعضا (مثلاً: 1,2,3)</option>
+  <option value="known">انتخاب از مجموعه‌های شناخته‌شده</option>
+</select>
+<div id="Bcontent" class="result-box"></div>
+<label>نوع عمل ریاضی:</label>
+<select id="operation">
+  <option value="">انتخاب کنید...</option>
+  <option value="union">اجتماع (A ∪ B)</option>
+  <option value="intersection">اشتراک (A ∩ B)</option>
+  <option value="difference">تفاضل (A − B)</option>
+  <option value="subset">زیرمجموعه (A ⊂ B)</option>
+</select>
+<div class="op-operators">
+<div class="op-wrap">
+  <div class="top">÷</div>
+  <div class="left">−</div>
+  <div class="center">عمل</div>
+  <div class="right">×</div>
+  <div class="bottom">+</div>
+</div>
+</div>
+<button onclick="doOperation()">نمایش نتیجه</button>
+<div id="resultBox" class="result-box"></div>
+<script>
+// گرفتن مجموعه A
+const showAdiv=document.getElementById("showA");
+const rawAexpr=localStorage.getItem("setA_expr");
+const rawAset=localStorage.getItem("setA_raw_set");
+const rawAcond=localStorage.getItem("setA_raw_cond");
+let setA={type:null, members:null, expr:rawAexpr||null};
+if(rawAexpr){
+  showAdiv.innerHTML=`<div><strong>مجموعه A:</strong></div><div class="code">${rawAexpr}</div>`;
+  const mems=(rawAcond||"").match(/-?\d+(\.\d+)?/g);
+  if(mems && mems.length>0){ setA={type:'finite', members:Array.from(new Set(mems.map(x=>Number(x)))), expr:rawAexpr}; }
+  else { setA={type:'symbolic', symbol:rawAset, expr:rawAexpr}; }
+}else{ showAdiv.innerHTML="<div>مجموعه A تعریف نشده — ابتدا تعریف کنید.</div>"; }
+document.getElementById("methodB").addEventListener("change",()=>{
+  const method=document.getElementById("methodB").value;
+  const box=document.getElementById("Bcontent");
+  if(method==="symbol"){ box.innerHTML=`<label>نماد ریاضی B:</label><input id="symbolB" type="text">`; }
+  else if(method==="members"){ box.innerHTML=`<label>اعضا B:</label><input id="membersB" type="text">`; }
+  else if(method==="known"){ box.innerHTML=`<label>انتخاب B:</label><select id="knownSelectB"><option value="N">N</option><option value="W">W</option><option value="Z">Z</option><option value="Q">Q</option><option value="I">گنگ</option><option value="R">R</option></select>`;}
+  else box.innerHTML='';
+});
+function readSetB(){
+  const method=document.getElementById("methodB").value;
+  if(method==="members"){ const txt=(document.getElementById("membersB")||{}).value||""; const nums=txt.match(/-?\d+(\.\d+)?/g); if(!nums) return {type:'empty'}; return {type:'finite', members:Array.from(new Set(nums.map(x=>Number(x))))}; }
+  else if(method==="symbol"){ const txt=(document.getElementById("symbolB")||{}).value||""; const nums=txt.match(/-?\d+(\.\d+)?/g); if(nums&&nums.length>0) return {type:'finite', members:Array.from(new Set(nums.map(x=>Number(x))))}; if(txt.includes('N')) return {type:'symbolic', symbol:'N'}; if(txt.includes('R')) return {type:'symbolic', symbol:'R'}; if(txt.includes('Z')) return {type:'symbolic', symbol:'Z'}; if(txt.includes('Q')) return {type:'symbolic', symbol:'Q'}; return {type:'symbolic', raw:txt};}
+  else if(method==="known"){ const sel=(document.getElementById("knownSelectB")||{}).value; return {type:'symbolic', symbol:sel}; }
+  return {type:'empty'};
+}
+function union(A,B){ return Array.from(new Set([].concat(A,B))).sort((a,b)=>a-b); }
+function intersection(A,B){ return A.filter(x=>B.includes(x)); }
+function difference(A,B){ return A.filter(x=>!B.includes(x)); }
+function doOperation(){
+  const setB=readSetB();
+  const op=document.getElementById("operation").value;
+  let resultTxt="";
+  if(setA.type==='finite' && setB.type==='finite'){
+    let res=[];
+    if(op==='union') res=union(setA.members,setB.members);
+    else if(op==='intersection') res=intersection(setA.members,setB.members);
+    else if(op==='difference') res=difference(setA.members,setB.members);
+    else if(op==='subset') resultTxt=(setA.members.every(x=>setB.members.includes(x))?'A زیرمجموعه B است':'A زیرمجموعه B نیست');
+    if(res.length>0) resultTxt=`{ ${res.join(', ')} }`;
+  } else { resultTxt="نمایش نتیجه دقیق برای مجموعه‌های نمادین/بی‌نهایت امکان‌پذیر نیست — نتیجه نمادین ارائه شد."; }
+  document.getElementById("resultBox").innerText=resultTxt;
+}
+</script>
+</body>
+</html>

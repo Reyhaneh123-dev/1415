@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>نمایشگاه مجموعه‌ها — بارگذاری</title>
+<style>
+  body {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    font-family: Tahoma, sans-serif;
+    overflow: hidden;
+  }
+  h1 {
+    font-size: 2.2rem;
+    margin-bottom: 18px;
+    animation: fade 2s ease-in-out infinite alternate;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  }
+  .loader {
+    border: 6px solid rgba(255,255,255,0.25);
+    border-top: 6px solid white;
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    margin-bottom: 20px;
+  }
+  .hint {
+    margin-top: 18px;
+    font-size: 0.95rem;
+    opacity: 0.95;
+    text-align:center;
+  }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  @keyframes fade { from { opacity: 0.5; transform: translateY(0); } to { opacity: 1; transform: translateY(-8px); } }
+</style>
+</head>
+<body>
+<h1>در حال بارگذاری نمایشگاه مجموعه‌ها...</h1>
+<div class="loader" aria-hidden="true"></div>
+<div class="hint">به‌زودی وارد صفحه‌ی تعریف مجموعه‌ها می‌شوید...</div>
+<script>
+  setTimeout(() => { window.location.href = "sets.html"; }, 2500);
+</script>
+</body>
+</html>

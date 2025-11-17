@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>نمایشگاه مجموعه‌ها — تعریف A</title>
+<style>
+  body { font-family: Tahoma, sans-serif; background: #f0f4ff; color:#122; padding:28px; direction:rtl; }
+  h2 { color:#0d47a1; margin-bottom:8px; }
+  label { display:block; margin-top:12px; }
+  select,input,button { margin:8px 0; padding:8px 10px; font-size:15px; border-radius:8px; border:1px solid #cde; }
+  button { border:none; cursor:pointer; background:#1976d2; color:white; padding:10px 14px; border-radius:10px; transition: .2s; }
+  button:hover { transform:translateY(-2px); background:#0d47a1; }
+  .result-box { background:white; border-radius:10px; padding:14px; margin-top:10px; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .math-ltr { direction:ltr; font-family:"Courier New", monospace; font-size:16px; background:#f6f9ff; padding:6px 10px; border-radius:8px; display:inline-block; }
+  .small-btn { padding:8px 10px; background:#1565c0; border-radius:8px; color:white; margin-right:6px; border:none; }
+  .venn-wrap { display:flex; align-items:center; justify-content:center; height:220px; position:relative; }
+  .morph { width:200px; height:6px; background:#1976d2; border-radius:3px; transition: all .9s ease; transform-origin:center center; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%) rotate(0deg); }
+  .morph.to-circle { width:200px; height:200px; border-radius:50%; background:rgba(25,118,210,0.12); box-shadow:inset 0 0 0 3px #1976d2; transform:translate(-50%, -50%) rotate(360deg); }
+  .venn-number { position:absolute; top:0; left:0; width:200px; height:200px; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; pointer-events:none; }
+  .venn-number span { opacity:0; transform:translateY(8px); transition:all .6s ease; background:transparent; font-weight:600; margin:2px; font-size:16px; }
+  .venn-number.show span { opacity:1; transform:translateY(0); }
+  svg.axis { width:100%; height:140px; overflow:visible; }
+</style>
+</head>
+<body>
+<h2>🔹 تعریف مجموعه A</h2>
+<label>عضو کدام مجموعه شناخته‌شده است؟</label>
+<select id="knownSet">
+  <option value="">انتخاب کنید...</option>
+  <option value="N">N (اعداد طبیعی)</option>
+  <option value="W">W (اعداد شمارشی)</option>
+  <option value="Z">Z (اعداد صحیح)</option>
+  <option value="Q">Q (اعداد گویا)</option>
+  <option value="I">اعداد گنگ</option>
+  <option value="R">R (اعداد حقیقی)</option>
+</select>
+<label>اگر شرطی دارد، آن را به زبان ساده بنویس (مثلاً: -2 ≤ x ≤ 4 یا x &lt; 5):</label>
+<input id="textCondition" type="text" placeholder="مثلاً -2 ≤ x ≤ 4 یا x < 5" />
+<button class="small-btn" onclick="makeExpression()">نمایش نماد ریاضی</button>
+<div id="mathResult" class="result-box"></div>
+<button class="small-btn" onclick="showMembers()">نمایش اعضا</button>
+<div id="membersBox" class="result-box"></div>
+<button class="small-btn" onclick="showVenn()">نمایش نمودار ون (انیمیشن)</button>
+<div id="vennBox" class="result-box"></div>
+<button class="small-btn" onclick="showAxis()">نمایش مجموعه روی محور</button>
+<div id="axisBox" class="result-box"></div>
+<div style="margin-top:18px;">
+  <button onclick="goOperations()" class="small-btn">➕ انجام عملیات ریاضی</button>
+</div>
+<script>
+// ذخیره A
+function makeExpression(){
+  const set = document.getElementById("knownSet").value;
+  const cond = document.getElementById("textCondition").value.trim();
+  if(!set){ alert("لطفاً یک مجموعه انتخاب کن"); return; }
+  let expr = cond ? `{ x ∈ ${set} | ${cond} }` : `{ x ∈ ${set} | … }`;
+  document.getElementById("mathResult").innerHTML=`<div>نمایش ریاضی:</div><div class="math-ltr" dir="ltr">${expr}</div>`;
+  localStorage.setItem("setA_expr", expr);
+  localStorage.setItem("setA_raw_set", set);
+  localStorage.setItem("setA_raw_cond", cond);
+}
+function showMembers(){
+  const set=document.getElementById("knownSet").value;
+  const box=document.getElementById("membersBox");
+  if(!set){ box.innerText="لطفاً ابتدا یک مجموعه انتخاب کن."; return; }
+  if(set==="R"||set==="I"||set==="Q"){box.innerText="نمایش اعضا برای مجموعه بی‌نهایت امکان‌پذیر نیست.";}
+  else if(set==="N"){box.innerText="{1, 2, 3, …}";}
+  else if(set==="W"){box.innerText="{0, 1, 2, 3, …}";}
+  else if(set==="Z"){box.innerText="{…, -2, -1, 0, 1, 2, …}";}
+  else{box.innerText="لطفاً ابتدا یک مجموعه انتخاب کن.";}
+}
+function showVenn(){
+  const set=document.getElementById("knownSet").value;
+  const cond=document.getElementById("textCondition").value.trim();
+  const box=document.getElementById("vennBox");
+  box.innerHTML="";
+  if(set==="R"||set==="I"||set==="Q"){box.innerText="نمایش ون برای مجموعه‌های بی‌نهایت امکان‌پذیر نیست."; return;}
+  const wrap=document.createElement("div"); wrap.className="venn-wrap";
+  const morph=document.createElement("div"); morph.className="morph"; wrap.appendChild(morph);
+  const numbersDiv=document.createElement("div"); numbersDiv.className="venn-number";
+  let found=[]; const membersMatch=cond.match(/(\{?\s*-?\d+(\.\d+)?(\s*,\s*-?\d+(\.\d+)?)+\s*\}?)/);
+  if(membersMatch){ found=membersMatch[0].replace(/[{}\s]/g,"").split(",");}
+  if(found.length===0) found=["1","2","3"];
+  found.slice(0,8).forEach(n=>{ const sp=document.createElement("span"); sp.textContent=n; numbersDiv.appendChild(sp);});
+  wrap.appendChild(numbersDiv); box.appendChild(wrap);
+  morph.style.transition="none"; morph.style.width="200px"; morph.style.height="6px"; morph.style.borderRadius="3px";
+  morph.style.background="#1976d2";
+  setTimeout(()=>{morph.classList.add("to-circle");},400);
+  setTimeout(()=>{numbersDiv.classList.add("show");},1200);
+}
+function showAxis(){ 
+  const set=document.getElementById("knownSet").value; const cond=document.getElementById("textCondition").value.trim(); const box=document.getElementById("axisBox"); box.innerHTML="";
+  if(!set){box.innerText="لطفاً ابتدا یک مجموعه انتخاب کن."; return;}
+  if(set==="I"||set==="Q"){box.innerText="نمایش روی محور برای اعداد گنگ و گویا امکان‌پذیر نیست."; return;}
+  box.innerText="نمایش محور برای اعضای محدود یا بازه‌های مشخص.";
+}
+function goOperations(){ window.location.href="operations.html"; }
+</script>
+</body>
+</html>
